@@ -66,10 +66,8 @@ struct _blux_device
 *返 回 值: 0 表示正常， 1 表示不正常
 *其    他: 函数内部调用
 ****************************************************************************/
-static rt_err_t blux_write_reg(rt_device_t dev,rt_uint8_t reg, rt_uint8_t data)
-{
-	  struct _blux_device * drv = (struct _blux_device *)dev;
-	  
+static rt_err_t blux_write_reg(struct rt_i2c_bus_device *bus,rt_uint8_t reg, rt_uint8_t data)
+{	  
     struct rt_i2c_msg msgs;
     rt_uint8_t buf[2] = {reg, data};
 
@@ -78,7 +76,7 @@ static rt_err_t blux_write_reg(rt_device_t dev,rt_uint8_t reg, rt_uint8_t data)
     msgs.buf   = buf;                       /* 发送数据指针 */
     msgs.len   = 2;
 
-    if (rt_i2c_transfer(drv->iic_dev, &msgs, 1) == 1)
+    if (rt_i2c_transfer(bus, &msgs, 1) == 1)
     {
         return RT_EOK;
     }
@@ -96,9 +94,8 @@ static rt_err_t blux_write_reg(rt_device_t dev,rt_uint8_t reg, rt_uint8_t data)
 *返 回 值: 0 表示正常， 1 表示不正常
 *其    他: 函数内部调用
 ****************************************************************************/
-static rt_err_t blux_read_reg(rt_device_t dev,rt_uint8_t reg, rt_uint8_t *buf, rt_uint8_t len)
+static rt_err_t blux_read_reg(struct rt_i2c_bus_device *bus,rt_uint8_t reg, rt_uint8_t *buf, rt_uint8_t len)
 {   
-	  struct _blux_device * drv = (struct _blux_device *)dev;
     struct rt_i2c_msg msgs[2];
 
     msgs[0].addr  = B_LUX_V30B_SlaveAddr_w;    /* 从机地址 */
@@ -111,7 +108,7 @@ static rt_err_t blux_read_reg(rt_device_t dev,rt_uint8_t reg, rt_uint8_t *buf, r
     msgs[1].buf   = buf;            					 /* 读取数据指针 */
     msgs[1].len   = len;           					   /* 读取数据字节数 */
 
-    if (rt_i2c_transfer(drv->iic_dev, msgs, 2) == 2)
+    if (rt_i2c_transfer(bus, msgs, 2) == 2)
     {
         return RT_EOK;
     }
@@ -123,9 +120,21 @@ static rt_err_t blux_read_reg(rt_device_t dev,rt_uint8_t reg, rt_uint8_t *buf, r
 }
 
 /****************************************************************************
+*函 数 名: stm32_blux_init
+*功能说明: blux初始化
+*形    参: 1. blux设备句柄
+*返 回 值: 0 表示正常， 1 表示不正常
+*其    他: 函数内部调用
+****************************************************************************/
+static rt_err_t stm32_blux_init(rt_device_t dev)
+{
+		return RT_EOK;
+}
+
+/****************************************************************************
 *函 数 名: blux_open
-*功能说明: 使DHT11器件复位
-*形    参: 1. DHT11设备句柄
+*功能说明: 打开blux设备
+*形    参: 1. blux设备句柄
 *返 回 值: 0 表示正常， 1 表示不正常
 *其    他: 函数内部调用
 ****************************************************************************/
@@ -212,7 +221,7 @@ int blux_drv_init(void)
 		
 //        dev->hard_desc        = &(_hard_desc[i]);
 		dev->device.type      = RT_Device_Class_Miscellaneous;
-//		dev->device.init      = stm32_blux_init;
+		dev->device.init      = stm32_blux_init;
 		dev->device.open      = stm32_blux_open;
 		dev->device.close     = RT_NULL;
 		dev->device.read      = stm32_blux_read;
